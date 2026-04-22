@@ -8,6 +8,8 @@ use BudgetBook\Application\Auth\TokenService;
 use BudgetBook\Domain\Account\UserRepository;
 use BudgetBook\Domain\Clock\Clock;
 use BudgetBook\Domain\Clock\SystemClock;
+use BudgetBook\Domain\Ledger\AccountRepository;
+use BudgetBook\Infrastructure\Persistence\Eloquent\EloquentAccountRepository;
 use BudgetBook\Infrastructure\Persistence\Eloquent\EloquentUserRepository;
 use BudgetBook\Infrastructure\Security\JwtTokenService;
 use DI\ContainerBuilder;
@@ -23,6 +25,7 @@ final class Container
         $builder->addDefinitions([
             Clock::class => \DI\autowire(SystemClock::class),
             UserRepository::class => \DI\autowire(EloquentUserRepository::class),
+            AccountRepository::class => \DI\autowire(EloquentAccountRepository::class),
             TokenService::class => static function (ContainerInterface $c): TokenService {
                 $secret = (string) ($_ENV['JWT_SECRET'] ?? '');
                 $accessTtl = (int) ($_ENV['JWT_ACCESS_TTL'] ?? 900);

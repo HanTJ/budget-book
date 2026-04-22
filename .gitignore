@@ -11,13 +11,17 @@
 /backend/phpstan.cache/
 
 # Node / Next
-/frontend/node_modules/
+node_modules/
 /frontend/.next/
 /frontend/out/
 /frontend/coverage/
 /frontend/playwright-report/
 /frontend/test-results/
 /frontend/.eslintcache
+/frontend/tsconfig.tsbuildinfo
+
+# Claude Code local state
+.claude/
 
 # OS/IDE
 .DS_Store

@@ -48,6 +48,11 @@ export default function DashboardPage() {
           <p className="text-sm text-gray-600">권한: {me.role}</p>
         </section>
       )}
+      <nav className="flex gap-3">
+        <a href="/accounts" className="rounded border px-4 py-2">
+          계정 관리
+        </a>
+      </nav>
     </main>
   );
 }

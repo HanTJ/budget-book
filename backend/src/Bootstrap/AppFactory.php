@@ -8,6 +8,7 @@ use BudgetBook\Infrastructure\Database\ConnectionFactory;
 use BudgetBook\Interface\Http\Controllers\Auth\LoginController;
 use BudgetBook\Interface\Http\Controllers\Auth\RegisterController;
 use BudgetBook\Interface\Http\Controllers\HealthController;
+use BudgetBook\Interface\Http\Controllers\Ledger\AccountController;
 use BudgetBook\Interface\Http\Controllers\MeController;
 use BudgetBook\Interface\Http\Middleware\CorsMiddleware;
 use BudgetBook\Interface\Http\Middleware\JwtAuthMiddleware;
@@ -46,6 +47,13 @@ final class AppFactory
 
         $app->get('/api/me', MeController::class)
             ->add(JwtAuthMiddleware::class);
+
+        $app->group('/api/accounts', function ($group): void {
+            $group->get('', [AccountController::class, 'list']);
+            $group->post('', [AccountController::class, 'create']);
+            $group->patch('/{id:[0-9]+}', [AccountController::class, 'patch']);
+            $group->delete('/{id:[0-9]+}', [AccountController::class, 'destroy']);
+        })->add(JwtAuthMiddleware::class);
 
         return $app;
     }
