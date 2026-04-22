@@ -52,6 +52,9 @@ export default function DashboardPage() {
         <a href="/accounts" className="rounded border px-4 py-2">
           계정 관리
         </a>
+        <a href="/transactions" className="rounded border px-4 py-2">
+          거래 기록
+        </a>
       </nav>
     </main>
   );
