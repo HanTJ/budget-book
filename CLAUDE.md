@@ -273,4 +273,97 @@ frontend/ app/ | components/ | lib/ | tests/unit | tests/e2e
 
 ## 10. 초기 부트스트랩 승인 게이트
 
-본 저장소는 아직 **비어 있는 상태**이다. `PLAN.md §9` 의 5개 결정은 **확정 완료** (완전 복식부기 / KRW 고정 / 일반 범위 시드 / 관리자 승인 가입 / soft delete). Phase 0 (스캐폴딩 + 첫 Red/Green 사이클) 착수는 사용자의 **명시적 승인("진행해" 등)** 을 기다린다. 승인 이후에는 Phase 0 → Phase 6 순서로 본 문서의 TDD 규칙에 따라 진행한다.
+Phase 0 → Phase 6 은 **완료 상태**(2026-04-22). 추가 작업 착수 시에도 본 문서의 TDD 규칙과 아래 §11 "반복 오류 방지" 를 우선한다. `PLAN.md §9` 의 5개 결정은 **확정** (완전 복식부기 / KRW 고정 / 일반 범위 시드 / 관리자 승인 가입 / soft delete).
+
+---
+
+## 11. 반복 오류 방지 — Lessons learned
+
+Phase 0~6 구현 중 반복적으로 막혔던 함정들. 새 코드를 작성할 때 **사전에 회피**하고, 수정 시 이 섹션을 먼저 참조한다.
+
+### 11.1 PHP / PHPStan level 8
+
+- **PHP 8.4 implicit nullable 금지**: 파라미터 기본값이 `null` 인 경우 타입 앞에 `?` 를 반드시 붙인다.
+  ```php
+  // 금지 (PHP 8.4 deprecation 경고)
+  protected function request(string $method, array $body = null) {}
+  // 올바름
+  protected function request(string $method, ?array $body = null) {}
+  ```
+- **Slim 제네릭 타입 명시**: `public static function create(): App` 은 PHPStan level 8 에서 실패. 반환타입에 `App<\Psr\Container\ContainerInterface|null>` 을 docblock 으로 지정한다.
+- **`isset($x) && $x !== null` 중복 체크 금지**: `isset()` 이 이미 null 을 배제하므로 PHPStan 은 `!== null` 을 `alwaysTrue` 로 처리한다. `isset($x)` 단독 사용.
+- **`match` 마지막 arm `alwaysTrue` 경고**: 앞서 `if` 로 일부 enum 값을 걸러내고 `match` 에서 다시 그 값을 arm 으로 쓰면 PHPStan 이 경고한다. 해결책 (선호 순):
+  1. `default => null` arm 추가
+  2. `if/elseif/else` 체인으로 재작성
+  3. 상단 필터를 제거하고 `match` 에서 모두 처리
+- **Eloquent Query Builder row 접근**: `$row->column` 직접 접근은 PHPStan 이 `object::$column` 으로 읽어 "property not found" 오류. `(array) $row` 로 캐스팅 후 `$data['column'] ?? default` 로 접근한다. hydrate 함수의 인자 타입은 `?object` 가 좋다 (`?stdClass` 는 pluck 결과 타입과 충돌).
+- **Repository `list<X>` 반환**: `Builder->pluck()->map()->all()` 은 key 보존 `array<int,X>` 를 반환. `list<X>` 로 선언했다면 `array_values(...)` 로 재인덱스.
+- **PHPStan 메모리**: level 8 전체 분석에 128MB 부족. `phpstan analyse --memory-limit=1G` (이미 `make typecheck-be` 에 반영). 개별 실행 시 잊지 말 것.
+
+### 11.2 Firebase JWT + Clock 추상화
+
+- **JWT 발행과 검증의 시계 불일치**: `JWT::encode` 는 `iat/exp` 를 호출자가 제공하지만 `JWT::decode` 는 **시스템 시계**(`time()`) 로 만료를 검사. 테스트에서 `FixedClock` 으로 토큰을 발행하면 실제 현재 시각과 차이가 나서 `ExpiredException` 이 임의로 터진다. **해결**: `verifyAccess()` 에서 `JWT::$timestamp = $this->clock->now()->getTimestamp();` 를 일시 설정하고 `finally` 에서 복원.
+
+### 11.3 Zustand persist (Next.js)
+
+- **SSR 에서 `persist.hasHydrated()` 호출 금지**: Next.js 서버 사이드 렌더 중 `useAuthStore.persist` 가 `undefined` 일 수 있다. `useState` 초기값 함수 안에서 바로 호출하면 SSR 500 오류.
+- **보호된 페이지 가드 패턴**: 모든 `/dashboard`, `/accounts`, `/transactions`, `/reports/*`, `/admin/*` 는 `useAuthHydrated()` (lib/stores/auth.ts) 훅으로 hydration 완료 여부를 기다린 후에야 redirect 판단을 내린다. 패턴:
+  ```tsx
+  const hydrated = useAuthHydrated();
+  const token = useAuthStore((s) => s.accessToken);
+  useEffect(() => {
+    if (!hydrated) return;
+    if (!token) { router.replace('/login'); return; }
+    void reload();
+  }, [hydrated, token, router, reload]);
+  if (!hydrated) return null;
+  if (!token) return null;
+  ```
+  이 가드 없이 바로 redirect 하면 rehydration 완료 전 login 으로 튕겨 `/login` 이 렌더된다.
+
+### 11.4 Playwright E2E
+
+- **`page.waitForResponse` race**: 초기 렌더에서 이미 GET 이 발생한 뒤 `waitForResponse(GET)` 를 등록하면 다음 GET 이 없어서 타임아웃. 패턴:
+  ```ts
+  await Promise.all([
+    page.waitForResponse((res) => POST 필터),
+    page.waitForResponse((res) => GET 필터),
+    page.getByRole('button', { name: /submit/ }).click(),
+  ]);
+  ```
+  클릭 직전에 모든 watcher 를 등록하면 race 가 없어진다.
+- **`getByText` 중복**: 같은 값(예: 금액 `-12000.00`)이 헤더·항목·요약에 여러 번 노출되면 strict-mode 위반. `.first()` 또는 `.nth(n)` 또는 더 좁은 locator 사용.
+- **Date input `fill` 전 clear**: `userEvent.type(dateInput, '2026-04-22')` 는 기존 값 뒤에 **append** 되어 형식이 깨진다. Playwright `page.locator(...).fill(...)` 은 덮어쓰므로 이쪽을 선호. Vitest + RTL 환경에서 `user.type` 을 써야 할 경우 `await user.clear(input); await user.type(input, value);`.
+- **로컬스토리지 주입은 addInitScript로**: 토큰 prefill 은 첫 navigation 전 `page.addInitScript((t) => window.localStorage.setItem('bb-auth', JSON.stringify({...})))` 로. 네비게이션 뒤 `page.evaluate` 는 너무 늦거나 race 소지.
+- **병렬 작업자 주의**: 공유 MySQL 에 여러 워커가 쓰면 admin 승인 같은 동일 리소스 경합. 개발 중엔 `--workers=1` 로 돌린다. CI 에서는 각 테스트가 독립 이메일/리소스를 만들도록.
+
+### 11.5 MySQL / Phinx
+
+- **MySQL 8 CHECK 제약**: Phinx 테이블 API 에는 CHECK 가 없다. `addColumn` 후 **`$this->execute("ALTER TABLE ... ADD CONSTRAINT ... CHECK (...)")`** 로 붙인다. Integration test 에서 PDO 예외로 검증.
+- **인덱스 커버리지 회귀 방지**: 새 쿼리 패턴을 추가하면 `tests/Integration/Migration/IndexCoverageTest.php` 에 EXPLAIN 어설션을 하나 더 넣어 `type != 'ALL'` 를 강제한다.
+- **docker-compose 환경변수 전달**: `.env` 자동 상속이 아니라 `docker-compose.yml` 의 서비스 `environment:` 블록에 **명시적으로 매핑**해야 컨테이너에서 읽힌다 (예: `INITIAL_ADMIN_EMAIL`, `CORS_ALLOWED_ORIGIN`).
+
+### 11.6 금액 포맷 일관성
+
+- **POST 응답 vs GET 응답 스케일 차이**: 유스케이스가 만든 `BigDecimal::of('8000')` 은 scale 0 → `"8000"`. DB 에서 읽은 `DECIMAL(18,2)` 는 scale 2 → `"8000.00"`. Presenter 가 달라진 값을 내보내면 프론트 Zod 일관성/E2E 어설션이 깨진다. **해결**: Presenter 에서 `$amount->toScale(2, RoundingMode::HALF_UP)` 로 항상 정규화 (`JournalEntryPresenter` 참조).
+
+### 11.7 Slim 미들웨어 순서
+
+- **CorsMiddleware 는 라우팅 바깥에**: OPTIONS preflight 가 routing 에서 404 로 끝나지 않도록 **`addRoutingMiddleware` 다음, `addErrorMiddleware` 이전** 에 `$app->add(new CorsMiddleware(...))` 를 넣는다. 순서는 LIFO (가장 나중에 `add` 한 미들웨어가 가장 바깥).
+
+### 11.8 복식부기 개시 잔액
+
+- **BalanceSheet identity 실패 주의**: 사용자가 `opening_balance > 0` 인 ASSET 계정만 가지고 있고 이를 offsetting 하는 EQUITY/LIABILITY opening 이 없으면 `자산 = 부채 + 자본` 이 깨진다. `BalanceSheetService` 는 `개시자본(초기 잔액)` synthetic equity 라인을 자동으로 덧붙여 항등식을 유지한다. 이 보정 로직을 건드릴 때는 `BalanceSheetServiceTest` 의 `test_per_account_balances_exposed` + `test_opening_balance_only_satisfies_identity` 를 먼저 업데이트.
+
+### 11.9 분개 수정 (PATCH)
+
+- **수정 = 새 분개 기록 + 기존 소프트 삭제** 순서. 반대로 하면 새 분개 검증이 실패할 때 원본이 이미 삭제돼 데이터가 유실된다. `UpdateJournalEntry` 참조. 어느 경우든 `JournalEntry::record()` 를 다시 거쳐 차대 균형 불변식이 강제되는지 확인.
+
+### 11.10 체크리스트 — 새 기능 착수 시
+
+1. PHPStan 회귀 후보?  →  `@return App<...>` 제네릭 / `(array) $row` / `list<X>` 재인덱스 / `match` default
+2. Domain 로직인가?  →  Unit test 에 Clock/IdGen 주입 + 불변식 assert
+3. DB 쿼리 추가했나?  →  IndexCoverageTest 에 EXPLAIN 한 줄 추가
+4. 새 보호 페이지인가?  →  `useAuthHydrated()` 가드 패턴 사용
+5. Presenter 에서 금액 내보내는가?  →  `toScale(2, HALF_UP)` 로 정규화
+6. E2E 시나리오 있나?  →  watcher 는 click 전 Promise.all, 금액 텍스트는 `.first()`
