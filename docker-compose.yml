@@ -41,6 +41,10 @@ services:
       DB_TEST_DATABASE: ${MYSQL_TEST_DATABASE:-budget_book_test}
       DB_USERNAME: ${MYSQL_USER:-budget}
       DB_PASSWORD: ${MYSQL_PASSWORD:-budget}
+      INITIAL_ADMIN_EMAIL: ${INITIAL_ADMIN_EMAIL:-}
+      INITIAL_ADMIN_PASSWORD: ${INITIAL_ADMIN_PASSWORD:-}
+      INITIAL_ADMIN_NAME: ${INITIAL_ADMIN_NAME:-Administrator}
+      CORS_ALLOWED_ORIGIN: ${CORS_ALLOWED_ORIGIN:-http://localhost:3000}
     volumes:
       - ./backend:/app
     depends_on:

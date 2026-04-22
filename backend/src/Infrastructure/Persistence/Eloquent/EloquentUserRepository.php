@@ -48,6 +48,31 @@ final class EloquentUserRepository implements UserRepository
             ->exists();
     }
 
+    public function listAll(?\BudgetBook\Domain\Account\UserStatus $status): array
+    {
+        $query = $this->table()->whereNull('deleted_at')->orderBy('id');
+        if ($status !== null) {
+            $query->where('status', $status->value);
+        }
+        $rows = $query->get();
+
+        $users = [];
+        foreach ($rows as $row) {
+            $hydrated = $this->hydrate($row);
+            if ($hydrated !== null) {
+                $users[] = $hydrated;
+            }
+        }
+        return $users;
+    }
+
+    public function softDelete(int $id): void
+    {
+        $this->table()
+            ->where('id', $id)
+            ->update(['deleted_at' => (new DateTimeImmutable('now'))->format('Y-m-d H:i:s')]);
+    }
+
     public function save(User $user): void
     {
         $now = (new DateTimeImmutable('now'))->format('Y-m-d H:i:s');

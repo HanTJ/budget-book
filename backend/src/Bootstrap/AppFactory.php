@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace BudgetBook\Bootstrap;
 
 use BudgetBook\Infrastructure\Database\ConnectionFactory;
+use BudgetBook\Interface\Http\Controllers\Admin\AdminUsersController;
 use BudgetBook\Interface\Http\Controllers\Auth\LoginController;
 use BudgetBook\Interface\Http\Controllers\Auth\RegisterController;
 use BudgetBook\Interface\Http\Controllers\HealthController;
@@ -12,6 +13,7 @@ use BudgetBook\Interface\Http\Controllers\Ledger\AccountController;
 use BudgetBook\Interface\Http\Controllers\Ledger\JournalEntryController;
 use BudgetBook\Interface\Http\Controllers\MeController;
 use BudgetBook\Interface\Http\Controllers\Reporting\ReportsController;
+use BudgetBook\Interface\Http\Middleware\AdminAuthMiddleware;
 use BudgetBook\Interface\Http\Middleware\CorsMiddleware;
 use BudgetBook\Interface\Http\Middleware\JwtAuthMiddleware;
 use Psr\Container\ContainerInterface;
@@ -68,6 +70,14 @@ final class AppFactory
             $group->get('/cash-flow', [ReportsController::class, 'cashFlow']);
             $group->get('/daily', [ReportsController::class, 'daily']);
         })->add(JwtAuthMiddleware::class);
+
+        $app->group('/api/admin', function ($group): void {
+            $group->get('/users', [AdminUsersController::class, 'list']);
+            $group->patch('/users/{id:[0-9]+}', [AdminUsersController::class, 'patch']);
+            $group->delete('/users/{id:[0-9]+}', [AdminUsersController::class, 'destroy']);
+        })
+            ->add(AdminAuthMiddleware::class)
+            ->add(JwtAuthMiddleware::class);
 
         return $app;
     }

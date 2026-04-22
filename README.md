@@ -27,6 +27,7 @@ make up            # mysql / php / nginx 기동
 make install       # composer install + npm install
 make migrate       # 개발 DB 마이그레이션
 make migrate-test  # 테스트 DB 마이그레이션
+make admin-seed    # 최초 관리자 계정 생성/갱신 (.env 의 INITIAL_ADMIN_* 사용)
 make test          # PHPUnit + Vitest
 make ci            # lint + typecheck + test 전부 (커밋 직전 필수)
 ```
@@ -44,7 +45,7 @@ make ci            # lint + typecheck + test 전부 (커밋 직전 필수)
 | 2 — 원장 | ✅ | 5 계정과목 + 기본 27계정 시드 + Account CRUD + ApproveUser 유스케이스 |
 | 3 — 분개(복식부기) | ✅ | `journal_entries` + `lines` (DB CHECK 차대 배타), 자동 분개 변환, `/api/entries` |
 | 4 — 보고서 | ✅ | 재무상태표(자산=부채+자본 assert) · 현금흐름표(직접법, Σ3섹션=현금증감 assert) · 일별 |
-| 5 — 관리자 | ⏳ | `/api/admin/users` (가입 승인 UI 포함) |
+| 5 — 관리자 | ✅ | AdminAuth 미들웨어 · `/api/admin/users` CRUD · 가입 승인(시드 자동) · 관리자 UI |
 | 6 — E2E/성능 | ⏳ | 전 플로우 Playwright, 인덱스 점검 |
 
 ## 현재 사용 가능한 API
@@ -54,6 +55,7 @@ make ci            # lint + typecheck + test 전부 (커밋 직전 필수)
 - `GET/POST /api/accounts` · `PATCH/DELETE /api/accounts/{id}`
 - `GET/POST /api/entries` (`?from=&to=`) · `DELETE /api/entries/{id}`
 - `GET /api/reports/balance-sheet?on=` · `GET /api/reports/cash-flow?from=&to=` · `GET /api/reports/daily?date=`
+- `GET /api/admin/users?status=` · `PATCH /api/admin/users/{id}` · `DELETE /api/admin/users/{id}` (ADMIN 전용)
 
 모든 `/api/*` (인증 제외) 는 Bearer JWT 필요. 타 사용자의 데이터 접근 시 404.
 
@@ -65,12 +67,13 @@ make ci            # lint + typecheck + test 전부 (커밋 직전 필수)
 - `/transactions` 거래 입력 + 일별 목록
 - `/reports/balance-sheet` 재무상태표 (자산/부채/자본 + 항등식 성립 표시)
 - `/reports/cash-flow` 현금흐름표 (영업/투자/재무 섹션 + 조정 일치 표시)
+- `/admin/users` ADMIN 전용 회원 관리 (승인 / 정지 / 삭제)
 
 ## 테스트 현황
 
-- Backend: **135 PHPUnit** (Unit + Integration + Feature, 441 assertions)
-- Frontend: **24 Vitest** (컴포넌트 테스트)
-- E2E: **2 Playwright** (register pending-notice / login surfaces account_pending)
+- Backend: **153 PHPUnit** (Unit + Integration + Feature, 482 assertions)
+- Frontend: **28 Vitest** (컴포넌트 테스트)
+- E2E: **3 Playwright** (register pending-notice / login account_pending / admin 승인 후 계정 추가)
 - PHPStan level 8, ESLint flat, PHP-CS-Fixer PSR-12 전부 clean
 
 ## 개발 원칙

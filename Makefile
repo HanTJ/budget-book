@@ -60,6 +60,10 @@ migrate-test: ## run Phinx migrations on test DB
 seed: ## seed default data
 	$(PHP_RUN) vendor/bin/phinx seed:run -c config/phinx.php -e development
 
+.PHONY: admin-seed
+admin-seed: ## seed initial admin (requires INITIAL_ADMIN_EMAIL + INITIAL_ADMIN_PASSWORD in .env)
+	$(PHP_RUN) vendor/bin/phinx seed:run -c config/phinx.php -e development -s InitialAdminSeeder
+
 # --- Test ---
 .PHONY: test
 test: test-be test-fe ## run all tests

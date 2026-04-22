@@ -13,4 +13,11 @@ interface UserRepository
     public function emailExists(Email $email): bool;
 
     public function save(User $user): void;
+
+    /**
+     * @return list<User>
+     */
+    public function listAll(?UserStatus $status): array;
+
+    public function softDelete(int $id): void;
 }

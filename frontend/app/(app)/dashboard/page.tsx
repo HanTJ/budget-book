@@ -61,6 +61,11 @@ export default function DashboardPage() {
         <a href="/reports/cash-flow" className="rounded border px-4 py-2">
           현금흐름표
         </a>
+        {me?.role === 'ADMIN' && (
+          <a href="/admin/users" className="rounded bg-red-600 px-4 py-2 text-white">
+            회원 관리
+          </a>
+        )}
       </nav>
     </main>
   );
