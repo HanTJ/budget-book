@@ -43,7 +43,7 @@ make ci            # lint + typecheck + test 전부 (커밋 직전 필수)
 | 1 — 인증 | ✅ | 회원가입(PENDING) / 로그인 / `GET /api/me` / JWT 미들웨어 / CORS |
 | 2 — 원장 | ✅ | 5 계정과목 + 기본 27계정 시드 + Account CRUD + ApproveUser 유스케이스 |
 | 3 — 분개(복식부기) | ✅ | `journal_entries` + `lines` (DB CHECK 차대 배타), 자동 분개 변환, `/api/entries` |
-| 4 — 보고서 | ⏳ | 재무상태표 / 현금흐름표 / 일별 스냅샷 |
+| 4 — 보고서 | ✅ | 재무상태표(자산=부채+자본 assert) · 현금흐름표(직접법, Σ3섹션=현금증감 assert) · 일별 |
 | 5 — 관리자 | ⏳ | `/api/admin/users` (가입 승인 UI 포함) |
 | 6 — E2E/성능 | ⏳ | 전 플로우 Playwright, 인덱스 점검 |
 
@@ -53,6 +53,7 @@ make ci            # lint + typecheck + test 전부 (커밋 직전 필수)
 - `POST /api/auth/register` · `POST /api/auth/login` · `GET /api/me`
 - `GET/POST /api/accounts` · `PATCH/DELETE /api/accounts/{id}`
 - `GET/POST /api/entries` (`?from=&to=`) · `DELETE /api/entries/{id}`
+- `GET /api/reports/balance-sheet?on=` · `GET /api/reports/cash-flow?from=&to=` · `GET /api/reports/daily?date=`
 
 모든 `/api/*` (인증 제외) 는 Bearer JWT 필요. 타 사용자의 데이터 접근 시 404.
 
@@ -62,11 +63,13 @@ make ci            # lint + typecheck + test 전부 (커밋 직전 필수)
 - `/dashboard` 사용자 정보
 - `/accounts` 계정 관리 (시스템 기본 계정은 삭제 불가)
 - `/transactions` 거래 입력 + 일별 목록
+- `/reports/balance-sheet` 재무상태표 (자산/부채/자본 + 항등식 성립 표시)
+- `/reports/cash-flow` 현금흐름표 (영업/투자/재무 섹션 + 조정 일치 표시)
 
 ## 테스트 현황
 
-- Backend: **114 PHPUnit** (Unit + Integration + Feature, 364 assertions)
-- Frontend: **20 Vitest** (컴포넌트 테스트)
+- Backend: **135 PHPUnit** (Unit + Integration + Feature, 441 assertions)
+- Frontend: **24 Vitest** (컴포넌트 테스트)
 - E2E: **2 Playwright** (register pending-notice / login surfaces account_pending)
 - PHPStan level 8, ESLint flat, PHP-CS-Fixer PSR-12 전부 clean
 

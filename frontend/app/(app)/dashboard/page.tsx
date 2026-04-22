@@ -48,12 +48,18 @@ export default function DashboardPage() {
           <p className="text-sm text-gray-600">권한: {me.role}</p>
         </section>
       )}
-      <nav className="flex gap-3">
+      <nav className="flex flex-wrap gap-3">
         <a href="/accounts" className="rounded border px-4 py-2">
           계정 관리
         </a>
         <a href="/transactions" className="rounded border px-4 py-2">
           거래 기록
+        </a>
+        <a href="/reports/balance-sheet" className="rounded border px-4 py-2">
+          재무상태표
+        </a>
+        <a href="/reports/cash-flow" className="rounded border px-4 py-2">
+          현금흐름표
         </a>
       </nav>
     </main>

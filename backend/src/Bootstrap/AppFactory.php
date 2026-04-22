@@ -11,6 +11,7 @@ use BudgetBook\Interface\Http\Controllers\HealthController;
 use BudgetBook\Interface\Http\Controllers\Ledger\AccountController;
 use BudgetBook\Interface\Http\Controllers\Ledger\JournalEntryController;
 use BudgetBook\Interface\Http\Controllers\MeController;
+use BudgetBook\Interface\Http\Controllers\Reporting\ReportsController;
 use BudgetBook\Interface\Http\Middleware\CorsMiddleware;
 use BudgetBook\Interface\Http\Middleware\JwtAuthMiddleware;
 use Psr\Container\ContainerInterface;
@@ -60,6 +61,12 @@ final class AppFactory
             $group->get('', [JournalEntryController::class, 'list']);
             $group->post('', [JournalEntryController::class, 'create']);
             $group->delete('/{id:[0-9]+}', [JournalEntryController::class, 'destroy']);
+        })->add(JwtAuthMiddleware::class);
+
+        $app->group('/api/reports', function ($group): void {
+            $group->get('/balance-sheet', [ReportsController::class, 'balanceSheet']);
+            $group->get('/cash-flow', [ReportsController::class, 'cashFlow']);
+            $group->get('/daily', [ReportsController::class, 'daily']);
         })->add(JwtAuthMiddleware::class);
 
         return $app;
