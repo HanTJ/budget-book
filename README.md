@@ -18,6 +18,7 @@
 
 - [`PLAN.md`](./PLAN.md) — Phase 별 구현 계획 + 확정된 결정사항
 - [`CLAUDE.md`](./CLAUDE.md) — 기술 헌법 + TDD 하네스 규칙 (변경 금지 조항 포함)
+- [`ARCHITECTURE.md`](./ARCHITECTURE.md) — 레이어 구성, 복식부기 불변식, 스키마/인덱스 맵
 
 ## 빠른 시작
 
@@ -46,14 +47,14 @@ make ci            # lint + typecheck + test 전부 (커밋 직전 필수)
 | 3 — 분개(복식부기) | ✅ | `journal_entries` + `lines` (DB CHECK 차대 배타), 자동 분개 변환, `/api/entries` |
 | 4 — 보고서 | ✅ | 재무상태표(자산=부채+자본 assert) · 현금흐름표(직접법, Σ3섹션=현금증감 assert) · 일별 |
 | 5 — 관리자 | ✅ | AdminAuth 미들웨어 · `/api/admin/users` CRUD · 가입 승인(시드 자동) · 관리자 UI |
-| 6 — E2E/성능 | ⏳ | 전 플로우 Playwright, 인덱스 점검 |
+| 6 — E2E/성능/문서 | ✅ | 전체 플로우 E2E + 인덱스 EXPLAIN 검증 + PATCH 분개 + ARCHITECTURE.md |
 
 ## 현재 사용 가능한 API
 
 - `GET  /api/health`
 - `POST /api/auth/register` · `POST /api/auth/login` · `GET /api/me`
 - `GET/POST /api/accounts` · `PATCH/DELETE /api/accounts/{id}`
-- `GET/POST /api/entries` (`?from=&to=`) · `DELETE /api/entries/{id}`
+- `GET/POST /api/entries` (`?from=&to=`) · `PATCH/DELETE /api/entries/{id}`
 - `GET /api/reports/balance-sheet?on=` · `GET /api/reports/cash-flow?from=&to=` · `GET /api/reports/daily?date=`
 - `GET /api/admin/users?status=` · `PATCH /api/admin/users/{id}` · `DELETE /api/admin/users/{id}` (ADMIN 전용)
 
@@ -71,9 +72,9 @@ make ci            # lint + typecheck + test 전부 (커밋 직전 필수)
 
 ## 테스트 현황
 
-- Backend: **153 PHPUnit** (Unit + Integration + Feature, 482 assertions)
+- Backend: **162 PHPUnit** (Unit + Integration + Feature, 510 assertions)
 - Frontend: **28 Vitest** (컴포넌트 테스트)
-- E2E: **3 Playwright** (register pending-notice / login account_pending / admin 승인 후 계정 추가)
+- E2E: **4 Playwright** (register pending / login account_pending / admin 승인+계정 / 전 플로우 기록→보고서)
 - PHPStan level 8, ESLint flat, PHP-CS-Fixer PSR-12 전부 clean
 
 ## 개발 원칙

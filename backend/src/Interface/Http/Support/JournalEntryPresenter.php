@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace BudgetBook\Interface\Http\Support;
 
+use Brick\Math\BigDecimal;
+use Brick\Math\RoundingMode;
 use BudgetBook\Domain\Ledger\JournalEntry;
 
 final class JournalEntryPresenter
@@ -21,16 +23,21 @@ final class JournalEntryPresenter
             'merchant' => $entry->merchant,
             'payment_method' => $entry->paymentMethod?->value,
             'source' => $entry->source,
-            'amount' => (string) $entry->totalDebit(),
+            'amount' => self::format($entry->totalDebit()),
             'lines' => array_map(
                 static fn ($line) => [
                     'account_id' => $line->accountId,
-                    'debit' => (string) $line->debit,
-                    'credit' => (string) $line->credit,
+                    'debit' => self::format($line->debit),
+                    'credit' => self::format($line->credit),
                     'line_no' => $line->lineNo,
                 ],
                 $entry->lines,
             ),
         ];
+    }
+
+    private static function format(BigDecimal $amount): string
+    {
+        return (string) $amount->toScale(2, RoundingMode::HALF_UP);
     }
 }

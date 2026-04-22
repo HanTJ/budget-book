@@ -6,7 +6,7 @@ import { CashFlowView } from '@/components/reports/CashFlowView';
 import * as reportsApi from '@/lib/api/reports';
 import { ApiError } from '@/lib/api/client';
 import type { CashFlowStatement } from '@/lib/schemas/reports';
-import { useAuthStore } from '@/lib/stores/auth';
+import { useAuthHydrated, useAuthStore } from '@/lib/stores/auth';
 
 function monthRange(): { from: string; to: string } {
   const now = new Date();
@@ -17,6 +17,7 @@ function monthRange(): { from: string; to: string } {
 
 export default function CashFlowPage() {
   const router = useRouter();
+  const hydrated = useAuthHydrated();
   const token = useAuthStore((s) => s.accessToken);
   const initial = monthRange();
   const [from, setFrom] = useState<string>(initial.from);
@@ -25,6 +26,7 @@ export default function CashFlowPage() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    if (!hydrated) return;
     if (!token) {
       router.replace('/login');
       return;
@@ -42,8 +44,9 @@ export default function CashFlowPage() {
         }
         setError('현금흐름표를 불러오지 못했습니다.');
       });
-  }, [token, router, from, to]);
+  }, [hydrated, token, router, from, to]);
 
+  if (!hydrated) return null;
   if (!token) return null;
 
   return (

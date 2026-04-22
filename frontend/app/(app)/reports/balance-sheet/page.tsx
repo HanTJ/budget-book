@@ -6,16 +6,18 @@ import { BalanceSheetView } from '@/components/reports/BalanceSheetView';
 import * as reportsApi from '@/lib/api/reports';
 import { ApiError } from '@/lib/api/client';
 import type { BalanceSheet } from '@/lib/schemas/reports';
-import { useAuthStore } from '@/lib/stores/auth';
+import { useAuthHydrated, useAuthStore } from '@/lib/stores/auth';
 
 export default function BalanceSheetPage() {
   const router = useRouter();
+  const hydrated = useAuthHydrated();
   const token = useAuthStore((s) => s.accessToken);
   const [on, setOn] = useState<string>(() => new Date().toISOString().slice(0, 10));
   const [sheet, setSheet] = useState<BalanceSheet | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    if (!hydrated) return;
     if (!token) {
       router.replace('/login');
       return;
@@ -33,8 +35,9 @@ export default function BalanceSheetPage() {
         }
         setError('재무상태표를 불러오지 못했습니다.');
       });
-  }, [token, router, on]);
+  }, [hydrated, token, router, on]);
 
+  if (!hydrated) return null;
   if (!token) return null;
 
   return (

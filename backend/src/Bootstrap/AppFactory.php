@@ -62,6 +62,7 @@ final class AppFactory
         $app->group('/api/entries', function ($group): void {
             $group->get('', [JournalEntryController::class, 'list']);
             $group->post('', [JournalEntryController::class, 'create']);
+            $group->patch('/{id:[0-9]+}', [JournalEntryController::class, 'patch']);
             $group->delete('/{id:[0-9]+}', [JournalEntryController::class, 'destroy']);
         })->add(JwtAuthMiddleware::class);
 

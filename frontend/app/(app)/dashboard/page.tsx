@@ -4,16 +4,18 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import * as authApi from '@/lib/api/auth';
 import type { Me } from '@/lib/schemas/auth';
-import { useAuthStore } from '@/lib/stores/auth';
+import { useAuthHydrated, useAuthStore } from '@/lib/stores/auth';
 
 export default function DashboardPage() {
   const router = useRouter();
+  const hydrated = useAuthHydrated();
   const token = useAuthStore((s) => s.accessToken);
   const clear = useAuthStore((s) => s.clear);
   const [me, setMe] = useState<Me | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    if (!hydrated) return;
     if (!token) {
       router.replace('/login');
       return;
@@ -22,8 +24,9 @@ export default function DashboardPage() {
       .me(token)
       .then(setMe)
       .catch(() => setError('세션이 만료되었습니다. 다시 로그인해주세요.'));
-  }, [token, router]);
+  }, [hydrated, token, router]);
 
+  if (!hydrated) return null;
   if (!token) return null;
 
   return (

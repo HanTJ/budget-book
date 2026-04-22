@@ -7,12 +7,13 @@ import * as adminApi from '@/lib/api/admin';
 import * as authApi from '@/lib/api/auth';
 import { ApiError } from '@/lib/api/client';
 import type { AdminUser } from '@/lib/schemas/admin';
-import { useAuthStore } from '@/lib/stores/auth';
+import { useAuthHydrated, useAuthStore } from '@/lib/stores/auth';
 
 type Filter = 'ALL' | 'PENDING' | 'ACTIVE' | 'SUSPENDED';
 
 export default function AdminUsersPage() {
   const router = useRouter();
+  const hydrated = useAuthHydrated();
   const token = useAuthStore((s) => s.accessToken);
   const [filter, setFilter] = useState<Filter>('ALL');
   const [users, setUsers] = useState<AdminUser[]>([]);
@@ -41,6 +42,7 @@ export default function AdminUsersPage() {
   }, [token, router, filter]);
 
   useEffect(() => {
+    if (!hydrated) return;
     if (!token) {
       router.replace('/login');
       return;
@@ -57,7 +59,7 @@ export default function AdminUsersPage() {
       .catch(() => {
         router.replace('/login');
       });
-  }, [token, router, reload]);
+  }, [hydrated, token, router, reload]);
 
   const approve = async (id: number): Promise<void> => {
     if (!token) return;
@@ -77,6 +79,7 @@ export default function AdminUsersPage() {
     await reload();
   };
 
+  if (!hydrated) return null;
   if (!token) return null;
 
   return (

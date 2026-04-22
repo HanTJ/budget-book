@@ -7,10 +7,11 @@ import { AccountList } from '@/components/accounts/AccountList';
 import * as accountsApi from '@/lib/api/accounts';
 import { ApiError } from '@/lib/api/client';
 import type { Account, CreateAccountInput } from '@/lib/schemas/accounts';
-import { useAuthStore } from '@/lib/stores/auth';
+import { useAuthHydrated, useAuthStore } from '@/lib/stores/auth';
 
 export default function AccountsPage() {
   const router = useRouter();
+  const hydrated = useAuthHydrated();
   const token = useAuthStore((s) => s.accessToken);
   const [accounts, setAccounts] = useState<Account[]>([]);
   const [error, setError] = useState<string | null>(null);
@@ -30,13 +31,15 @@ export default function AccountsPage() {
   }, [token, router]);
 
   useEffect(() => {
+    if (!hydrated) return;
     if (!token) {
       router.replace('/login');
       return;
     }
     void reload();
-  }, [token, router, reload]);
+  }, [hydrated, token, router, reload]);
 
+  if (!hydrated) return null;
   if (!token) return null;
 
   const onCreate = async (payload: CreateAccountInput): Promise<void> => {

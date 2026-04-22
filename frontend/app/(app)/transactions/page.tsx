@@ -9,7 +9,7 @@ import { ApiError } from '@/lib/api/client';
 import * as entriesApi from '@/lib/api/entries';
 import type { Account } from '@/lib/schemas/accounts';
 import type { JournalEntry, RecordEntryInput } from '@/lib/schemas/entries';
-import { useAuthStore } from '@/lib/stores/auth';
+import { useAuthHydrated, useAuthStore } from '@/lib/stores/auth';
 
 function monthRange(): { from: string; to: string } {
   const now = new Date();
@@ -22,6 +22,7 @@ function monthRange(): { from: string; to: string } {
 
 export default function TransactionsPage() {
   const router = useRouter();
+  const hydrated = useAuthHydrated();
   const token = useAuthStore((s) => s.accessToken);
   const [accounts, setAccounts] = useState<Account[]>([]);
   const [entries, setEntries] = useState<JournalEntry[]>([]);
@@ -48,13 +49,15 @@ export default function TransactionsPage() {
   }, [token, router]);
 
   useEffect(() => {
+    if (!hydrated) return;
     if (!token) {
       router.replace('/login');
       return;
     }
     void reload();
-  }, [token, router, reload]);
+  }, [hydrated, token, router, reload]);
 
+  if (!hydrated) return null;
   if (!token) return null;
 
   const onRecord = async (input: RecordEntryInput): Promise<void> => {
