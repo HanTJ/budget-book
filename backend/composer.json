@@ -1,0 +1,44 @@
+{
+    "name": "budget-book/backend",
+    "description": "Budget Book backend — PHP 8.4 / Slim 4 / Eloquent / full double-entry accounting",
+    "type": "project",
+    "license": "proprietary",
+    "require": {
+        "php": "^8.4",
+        "slim/slim": "^4.14",
+        "slim/psr7": "^1.7",
+        "php-di/php-di": "^7.0",
+        "illuminate/database": "^11.0",
+        "robmorgan/phinx": "^0.16",
+        "firebase/php-jwt": "^7.0",
+        "brick/math": "^0.12",
+        "vlucas/phpdotenv": "^5.6",
+        "monolog/monolog": "^3.7",
+        "ramsey/uuid": "^4.7"
+    },
+    "require-dev": {
+        "phpunit/phpunit": "^11.5",
+        "phpstan/phpstan": "^2.0",
+        "friendsofphp/php-cs-fixer": "^3.64"
+    },
+    "autoload": {
+        "psr-4": {
+            "BudgetBook\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "BudgetBook\\Tests\\": "tests/"
+        }
+    },
+    "config": {
+        "sort-packages": true,
+        "allow-plugins": {}
+    },
+    "scripts": {
+        "test": "phpunit --colors=auto",
+        "stan": "phpstan analyse",
+        "cs": "php-cs-fixer fix --dry-run --diff",
+        "cs:fix": "php-cs-fixer fix"
+    }
+}

@@ -1,0 +1,25 @@
+.env
+.env.local
+*.log
+
+# PHP / Composer
+/backend/vendor/
+/backend/.phpunit.result.cache
+/backend/.phpunit.cache/
+/backend/coverage/
+/backend/.php-cs-fixer.cache
+/backend/phpstan.cache/
+
+# Node / Next
+/frontend/node_modules/
+/frontend/.next/
+/frontend/out/
+/frontend/coverage/
+/frontend/playwright-report/
+/frontend/test-results/
+/frontend/.eslintcache
+
+# OS/IDE
+.DS_Store
+.idea/
+.vscode/
