@@ -18,10 +18,7 @@ export async function listEntries(
   return journalEntryListSchema.parse(raw).entries;
 }
 
-export async function recordEntry(
-  token: string,
-  input: RecordEntryInput,
-): Promise<JournalEntry> {
+export async function recordEntry(token: string, input: RecordEntryInput): Promise<JournalEntry> {
   const body: Record<string, unknown> = {
     occurred_on: input.occurred_on,
     amount: input.amount,

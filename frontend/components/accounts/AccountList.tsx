@@ -47,9 +47,7 @@ export function AccountList({ accounts, onDelete }: Props) {
                   {account.cash_flow_section !== 'NONE' && (
                     <span className="ml-2 text-xs text-blue-600">{account.cash_flow_section}</span>
                   )}
-                  {account.is_system && (
-                    <span className="ml-2 text-xs text-gray-400">기본</span>
-                  )}
+                  {account.is_system && <span className="ml-2 text-xs text-gray-400">기본</span>}
                 </div>
                 <div className="flex items-center gap-3 text-sm">
                   <span className="text-gray-600">{account.opening_balance}</span>

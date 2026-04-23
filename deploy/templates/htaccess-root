@@ -1,0 +1,48 @@
+# ==============================================================
+# Budget Book — 닷홈(samdogs.dothome.co.kr) docroot .htaccess
+# FTP 업로드 시 이 파일은 public_html/.htaccess 로 들어가야 한다.
+# ==============================================================
+
+# UTF-8
+AddDefaultCharset utf-8
+
+# 디렉터리 인덱싱 차단
+Options -Indexes
+
+# ---- 코드/설정 디렉터리 직접 접근 차단 ----
+RedirectMatch 403 ^/app/.*$
+RedirectMatch 403 ^/\.env.*$
+RedirectMatch 403 ^/\.installed$
+
+<IfModule mod_rewrite.c>
+  RewriteEngine On
+  RewriteBase /
+
+  # Authorization 헤더 전달 — Apache+CGI/suPHP 환경(닷홈 포함)은 기본적으로 Authorization
+  # 헤더를 PHP 로 넘기지 않는다. 아래 규칙으로 $_SERVER['HTTP_AUTHORIZATION'] 에 복제한다.
+  RewriteCond %{HTTP:Authorization} .+
+  RewriteRule ^ - [E=HTTP_AUTHORIZATION:%{HTTP:Authorization}]
+
+  # /api/precheck.php, /api/install.php 는 FTP 로 올려놓은 실제 파일을 그대로 서빙한다.
+  # /api/(나머지 전부) → Slim 프론트 컨트롤러(api/index.php) 로 라우팅.
+  RewriteCond %{REQUEST_FILENAME} !-f
+  RewriteCond %{REQUEST_FILENAME} !-d
+  RewriteRule ^api/.*$ api/index.php [L,QSA]
+
+  # SPA fallback: 실제 파일/디렉터리가 아니면 프론트엔드 SPA 엔트리 index.html 로.
+  RewriteCond %{REQUEST_URI} !^/api/
+  RewriteCond %{REQUEST_FILENAME} !-f
+  RewriteCond %{REQUEST_FILENAME} !-d
+  RewriteRule ^ index.html [L]
+</IfModule>
+
+# 정적 자산 캐시 (Next.js 가 해시된 파일명을 생성하므로 안전)
+<IfModule mod_expires.c>
+  ExpiresActive On
+  ExpiresByType image/png            "access plus 30 days"
+  ExpiresByType image/jpg            "access plus 30 days"
+  ExpiresByType image/svg+xml        "access plus 30 days"
+  ExpiresByType text/css             "access plus 7 days"
+  ExpiresByType application/javascript "access plus 7 days"
+  ExpiresByType text/html            "access plus 0 seconds"
+</IfModule>

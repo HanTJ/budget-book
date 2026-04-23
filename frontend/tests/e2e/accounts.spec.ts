@@ -58,7 +58,7 @@ test('approved user can add an ASSET account and see it in the list', async ({ p
   await page.getByLabel('이름', { exact: true }).fill(unique);
   await page.getByLabel(/계정과목/).selectOption('ASSET');
 
-  const [createResp, , ] = await Promise.all([
+  const [createResp, ,] = await Promise.all([
     page.waitForResponse(
       (res) => res.url().endsWith('/accounts') && res.request().method() === 'POST',
     ),

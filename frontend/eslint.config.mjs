@@ -5,9 +5,11 @@ export default [
   {
     ignores: [
       '.next/**',
+      'out/**',
       'node_modules/**',
       'coverage/**',
       'playwright-report/**',
+      'test-results/**',
       'next-env.d.ts',
     ],
   },

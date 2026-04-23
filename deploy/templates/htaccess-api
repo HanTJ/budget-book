@@ -1,0 +1,9 @@
+# ==============================================================
+# Budget Book — public_html/api/.htaccess
+# PHP 엔트리 파일만 노출하고, 부수 파일(.env, .lock, .md, .yml, .sql 등)은
+# 업로드 실수로 들어가더라도 모두 차단한다.
+# ==============================================================
+
+<FilesMatch "\.(env|ini|log|sql|yaml|yml|md|json|lock|dist|example|bak|swp|~)$">
+  Require all denied
+</FilesMatch>

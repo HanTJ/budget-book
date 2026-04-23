@@ -78,9 +78,7 @@ export function RegisterForm({ onSubmit }: Props) {
           {...form.register('display_name')}
         />
         {form.formState.errors.display_name && (
-          <span className="text-sm text-red-600">
-            {form.formState.errors.display_name.message}
-          </span>
+          <span className="text-sm text-red-600">{form.formState.errors.display_name.message}</span>
         )}
       </label>
 

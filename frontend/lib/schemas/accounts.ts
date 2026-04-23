@@ -25,7 +25,11 @@ export const accountListSchema = z.object({
 
 export const createAccountSchema = z
   .object({
-    name: z.string().trim().min(1, '이름을 입력해주세요.').max(100, '이름은 100자 이하여야 합니다.'),
+    name: z
+      .string()
+      .trim()
+      .min(1, '이름을 입력해주세요.')
+      .max(100, '이름은 100자 이하여야 합니다.'),
     account_type: accountTypeSchema,
     subtype: z.string().optional(),
     cash_flow_section: cashFlowSectionSchema.default('NONE'),

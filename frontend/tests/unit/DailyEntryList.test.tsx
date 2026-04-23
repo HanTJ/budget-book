@@ -43,10 +43,7 @@ describe('DailyEntryList', () => {
     const onDelete = vi.fn();
     const user = userEvent.setup();
     render(
-      <DailyEntryList
-        entries={[make({ id: 42, merchant: '삭제 대상' })]}
-        onDelete={onDelete}
-      />,
+      <DailyEntryList entries={[make({ id: 42, merchant: '삭제 대상' })]} onDelete={onDelete} />,
     );
 
     await user.click(screen.getByRole('button', { name: /삭제/ }));

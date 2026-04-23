@@ -5,9 +5,7 @@ import HomePage from '@/app/page';
 describe('HomePage', () => {
   it('renders the Budget Book heading', () => {
     render(<HomePage />);
-    expect(
-      screen.getByRole('heading', { level: 1, name: /budget book/i }),
-    ).toBeInTheDocument();
+    expect(screen.getByRole('heading', { level: 1, name: /budget book/i })).toBeInTheDocument();
   });
 
   it('includes a Korean subtitle referencing 가계부', () => {

@@ -22,10 +22,7 @@ export default function AdminUsersPage() {
   const reload = useCallback(async () => {
     if (!token) return;
     try {
-      const list = await adminApi.listAdminUsers(
-        token,
-        filter === 'ALL' ? undefined : filter,
-      );
+      const list = await adminApi.listAdminUsers(token, filter === 'ALL' ? undefined : filter);
       setUsers(list);
       setError(null);
     } catch (e) {
@@ -97,9 +94,7 @@ export default function AdminUsersPage() {
             key={f}
             type="button"
             onClick={() => setFilter(f)}
-            className={`rounded border px-3 py-1 ${
-              filter === f ? 'bg-black text-white' : ''
-            }`}
+            className={`rounded border px-3 py-1 ${filter === f ? 'bg-black text-white' : ''}`}
           >
             {f}
           </button>

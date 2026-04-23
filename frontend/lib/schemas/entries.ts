@@ -28,9 +28,7 @@ export const journalEntryListSchema = z.object({
 });
 
 export const recordEntrySchema = z.object({
-  occurred_on: z
-    .string()
-    .regex(/^\d{4}-\d{2}-\d{2}$/, '날짜는 YYYY-MM-DD 형식이어야 합니다.'),
+  occurred_on: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, '날짜는 YYYY-MM-DD 형식이어야 합니다.'),
   amount: z
     .string()
     .regex(/^\d+(\.\d{1,2})?$/, '양수 금액(소수 최대 2자리)을 입력해주세요.')

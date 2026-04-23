@@ -16,8 +16,7 @@ export interface RequestOptions {
   signal?: AbortSignal;
 }
 
-const baseUrl = (): string =>
-  (process.env['NEXT_PUBLIC_API_BASE'] ?? 'http://localhost:8080/api').replace(/\/$/, '');
+const baseUrl = (): string => (process.env['NEXT_PUBLIC_API_BASE'] ?? '/api').replace(/\/$/, '');
 
 export async function apiRequest<T>(path: string, options: RequestOptions = {}): Promise<T> {
   const { method = 'GET', body, token, signal } = options;

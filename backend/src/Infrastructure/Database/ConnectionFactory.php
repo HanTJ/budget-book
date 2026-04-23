@@ -19,18 +19,25 @@ final class ConnectionFactory
             return self::$capsule;
         }
 
-        $capsule = new Capsule();
-        $capsule->addConnection(array_merge([
+        $config = [
             'driver' => 'mysql',
             'host' => $_ENV['DB_HOST'] ?? 'mysql',
-            'port' => (int) ($_ENV['DB_PORT'] ?? 3306),
             'database' => $_ENV['DB_DATABASE'] ?? 'budget_book',
             'username' => $_ENV['DB_USERNAME'] ?? 'budget',
             'password' => $_ENV['DB_PASSWORD'] ?? 'budget',
             'charset' => 'utf8mb4',
             'collation' => 'utf8mb4_0900_ai_ci',
             'prefix' => '',
-        ], $overrides));
+        ];
+        // DB_PORT 가 비어 있으면 DSN 에서 port 를 아예 생략. 닷홈처럼 localhost 소켓
+        // 경로만 허용하는 shared-host 에서 TCP 로 빠지지 않도록 하기 위함.
+        $port = $_ENV['DB_PORT'] ?? '';
+        if ($port !== '') {
+            $config['port'] = (int) $port;
+        }
+
+        $capsule = new Capsule();
+        $capsule->addConnection(array_merge($config, $overrides));
 
         $capsule->setAsGlobal();
         $capsule->bootEloquent();

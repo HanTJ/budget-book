@@ -2,6 +2,24 @@
 
 declare(strict_types=1);
 
+// DB_PORT 가 비어 있으면 Phinx adapter DSN 에서 port 를 생략한다 (닷홈 소켓 접속 호환).
+$port = $_ENV['DB_PORT'] ?? '';
+$makeEnv = static function (string $database) use ($port): array {
+    $env = [
+        'adapter' => 'mysql',
+        'host' => $_ENV['DB_HOST'] ?? 'mysql',
+        'name' => $database,
+        'user' => $_ENV['DB_USERNAME'] ?? 'budget',
+        'pass' => $_ENV['DB_PASSWORD'] ?? 'budget',
+        'charset' => 'utf8mb4',
+        'collation' => 'utf8mb4_0900_ai_ci',
+    ];
+    if ($port !== '') {
+        $env['port'] = (int) $port;
+    }
+    return $env;
+};
+
 return [
     'paths' => [
         'migrations' => __DIR__ . '/../database/migrations',
@@ -10,26 +28,8 @@ return [
     'environments' => [
         'default_migration_table' => 'phinxlog',
         'default_environment' => 'development',
-        'development' => [
-            'adapter' => 'mysql',
-            'host' => $_ENV['DB_HOST'] ?? 'mysql',
-            'name' => $_ENV['DB_DATABASE'] ?? 'budget_book',
-            'user' => $_ENV['DB_USERNAME'] ?? 'budget',
-            'pass' => $_ENV['DB_PASSWORD'] ?? 'budget',
-            'port' => (int) ($_ENV['DB_PORT'] ?? 3306),
-            'charset' => 'utf8mb4',
-            'collation' => 'utf8mb4_0900_ai_ci',
-        ],
-        'testing' => [
-            'adapter' => 'mysql',
-            'host' => $_ENV['DB_HOST'] ?? 'mysql',
-            'name' => $_ENV['DB_TEST_DATABASE'] ?? 'budget_book_test',
-            'user' => $_ENV['DB_USERNAME'] ?? 'budget',
-            'pass' => $_ENV['DB_PASSWORD'] ?? 'budget',
-            'port' => (int) ($_ENV['DB_PORT'] ?? 3306),
-            'charset' => 'utf8mb4',
-            'collation' => 'utf8mb4_0900_ai_ci',
-        ],
+        'development' => $makeEnv($_ENV['DB_DATABASE'] ?? 'budget_book'),
+        'testing' => $makeEnv($_ENV['DB_TEST_DATABASE'] ?? 'budget_book_test'),
     ],
     'version_order' => 'creation',
 ];

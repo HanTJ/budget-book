@@ -20,7 +20,9 @@ describe('AdminUserTable', () => {
       make({ id: 1, email: 'a@example.com' }),
       make({ id: 2, email: 'b@example.com', status: 'ACTIVE' }),
     ];
-    render(<AdminUserTable users={users} onApprove={vi.fn()} onSuspend={vi.fn()} onDelete={vi.fn()} />);
+    render(
+      <AdminUserTable users={users} onApprove={vi.fn()} onSuspend={vi.fn()} onDelete={vi.fn()} />,
+    );
 
     expect(screen.getByText('a@example.com')).toBeInTheDocument();
     expect(screen.getByText('b@example.com')).toBeInTheDocument();

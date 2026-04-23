@@ -50,7 +50,10 @@ describe('AccountList', () => {
 
   it('hides delete button for system accounts', () => {
     render(
-      <AccountList accounts={[sample({ id: 10, is_system: true, name: '현금' })]} onDelete={vi.fn()} />,
+      <AccountList
+        accounts={[sample({ id: 10, is_system: true, name: '현금' })]}
+        onDelete={vi.fn()}
+      />,
     );
     expect(screen.queryByRole('button', { name: /삭제/ })).not.toBeInTheDocument();
   });

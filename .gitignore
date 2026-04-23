@@ -27,3 +27,7 @@ node_modules/
 .DS_Store
 .idea/
 .vscode/
+
+# Deployment artifacts
+/deploy/build/
+/deploy/*.zip

@@ -20,7 +20,9 @@ export async function register(input: RegisterInput): Promise<RegisteredUser> {
   });
 }
 
-export async function login(input: LoginInput): Promise<{ accessToken: string; refreshToken: string }> {
+export async function login(
+  input: LoginInput,
+): Promise<{ accessToken: string; refreshToken: string }> {
   const raw = await apiRequest<unknown>('/auth/login', {
     method: 'POST',
     body: input,

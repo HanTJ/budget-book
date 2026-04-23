@@ -9,7 +9,9 @@ import {
 } from '../schemas/reports';
 
 export async function fetchBalanceSheet(token: string, on: string): Promise<BalanceSheet> {
-  const raw = await apiRequest<unknown>(`/reports/balance-sheet?on=${encodeURIComponent(on)}`, { token });
+  const raw = await apiRequest<unknown>(`/reports/balance-sheet?on=${encodeURIComponent(on)}`, {
+    token,
+  });
   return balanceSheetSchema.parse(raw);
 }
 
@@ -26,6 +28,8 @@ export async function fetchCashFlow(
 }
 
 export async function fetchDailyReport(token: string, date: string): Promise<DailyReport> {
-  const raw = await apiRequest<unknown>(`/reports/daily?date=${encodeURIComponent(date)}`, { token });
+  const raw = await apiRequest<unknown>(`/reports/daily?date=${encodeURIComponent(date)}`, {
+    token,
+  });
   return dailyReportSchema.parse(raw);
 }

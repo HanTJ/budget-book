@@ -6,7 +6,15 @@ interface Props {
   sheet: BalanceSheet;
 }
 
-function Section({ title, lines, total }: { title: string; lines: BalanceSheetLine[]; total: string }) {
+function Section({
+  title,
+  lines,
+  total,
+}: {
+  title: string;
+  lines: BalanceSheetLine[];
+  total: string;
+}) {
   return (
     <section className="rounded border">
       <header className="flex items-center justify-between border-b bg-gray-50 px-4 py-2">
@@ -24,7 +32,9 @@ function Section({ title, lines, total }: { title: string; lines: BalanceSheetLi
             >
               <span>
                 {line.name}
-                {line.subtype && <span className="ml-2 text-xs text-gray-500">[{line.subtype}]</span>}
+                {line.subtype && (
+                  <span className="ml-2 text-xs text-gray-500">[{line.subtype}]</span>
+                )}
               </span>
               <span className="font-mono text-sm">{line.balance}</span>
             </li>

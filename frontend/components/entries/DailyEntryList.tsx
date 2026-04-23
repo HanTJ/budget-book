@@ -34,9 +34,7 @@ export function DailyEntryList({ entries, onDelete }: Props) {
                 <div className="flex flex-col">
                   <span>{entry.merchant ?? '(사용처 없음)'}</span>
                   {entry.memo && <span className="text-xs text-gray-500">{entry.memo}</span>}
-                  <span className="text-xs text-gray-500">
-                    {entry.payment_method ?? '—'}
-                  </span>
+                  <span className="text-xs text-gray-500">{entry.payment_method ?? '—'}</span>
                 </div>
                 <div className="flex items-center gap-3 text-sm">
                   <span>{entry.amount}</span>

@@ -36,8 +36,13 @@ final class AppFactory
         $app->addBodyParsingMiddleware();
         $app->addRoutingMiddleware();
 
+        // CORS 는 프론트와 백엔드가 다른 origin 일 때만 필요.
+        // 닷홈처럼 same-origin(한 도메인 내 /api 프리픽스) 배포인 경우
+        // CORS_ALLOWED_ORIGIN 을 비워두거나 'same-origin' 으로 지정하면 미들웨어를 생략한다.
         $allowedOrigin = $_ENV['CORS_ALLOWED_ORIGIN'] ?? 'http://localhost:3000';
-        $app->add(new CorsMiddleware($allowedOrigin));
+        if ($allowedOrigin !== '' && $allowedOrigin !== 'same-origin') {
+            $app->add(new CorsMiddleware($allowedOrigin));
+        }
 
         $app->addErrorMiddleware(
             displayErrorDetails: ($_ENV['APP_DEBUG'] ?? 'false') === 'true',

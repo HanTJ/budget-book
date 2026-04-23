@@ -74,7 +74,12 @@ export function EntryForm({ accounts, onSubmit }: Props) {
 
       <label className="flex flex-col gap-1">
         <span>금액</span>
-        <input type="text" inputMode="decimal" className="rounded border p-2" {...form.register('amount')} />
+        <input
+          type="text"
+          inputMode="decimal"
+          className="rounded border p-2"
+          {...form.register('amount')}
+        />
         {form.formState.errors.amount && (
           <span className="text-sm text-red-600">{form.formState.errors.amount.message}</span>
         )}
