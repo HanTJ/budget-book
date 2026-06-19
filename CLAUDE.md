@@ -8,10 +8,58 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## 0. Project Snapshot
 
-- **Product**: 현금흐름표 / 재무상태표 형식을 반영한 개인 웹 가계부 (다중 사용자 + 관리자)
-- **Repo layout**: `backend/` (PHP API), `frontend/` (Next.js), `docker-compose.yml` 로 로컬 환경 구동
-- **Working directory**: `/home/k1410857/claude-workspace/budget-book`
-- **상세 계획**: [`PLAN.md`](./PLAN.md)
+- **Product**: 현금흐름표 / 재무상태표 형식을 반영한 개인 웹 가계부 (다중 사용자 + 관리자). 사용자 입력(금액/지불방식/사용처/카테고리)을 서버가 **완전 복식부기 분개**로 자동 변환해 저장.
+- **Repo layout**: `backend/` (Slim/PHP API), `frontend/` (Next.js), `docker-compose.yml` 로 로컬 환경 구동, `deploy/` + `docs/DEPLOY_DOTHOME.md` (닷홈 FTP 배포)
+- **Working directory (canonical dev path)**: `/home/k1410857/claude-workspace/budget-book` (원격/CI 환경에서는 체크아웃 경로가 다를 수 있음 — 경로 하드코딩 금지, 항상 repo 루트 기준 상대경로 사용)
+- **현재 상태**: Phase 0 → 7 **완료** (§10). 추가 작업도 본 문서 규칙을 우선.
+- **동반 문서** (충돌 시 본 문서 우선):
+  - [`PLAN.md`](./PLAN.md) — Phase 별 계획 + §9 확정 결정사항
+  - [`ARCHITECTURE.md`](./ARCHITECTURE.md) — 레이어 다이어그램, 복식부기 불변식 코드 예시, 자동변환 매트릭스, 스키마/인덱스 맵, 파일 탐색 지도
+  - [`README.md`](./README.md) — 빠른 시작, 진행 현황
+  - [`docs/DEPLOY_DOTHOME.md`](./docs/DEPLOY_DOTHOME.md) — 닷홈 same-origin 배포 절차
+
+---
+
+## 0.1 코드 지도 (현재 구현 인벤토리)
+
+> 어디에 무엇이 있는지의 단일 참조. 새 코드는 아래 패턴을 따라 같은 레이어에 배치한다. 상세 다이어그램/스키마는 [`ARCHITECTURE.md`](./ARCHITECTURE.md) 참조.
+
+### API 엔드포인트 (전부 `/api` 프리픽스, 라우트는 `src/Bootstrap/AppFactory.php`)
+
+| Method | Path | 컨트롤러 | 미들웨어 |
+| --- | --- | --- | --- |
+| GET | `/api/health` | `HealthController` | — |
+| POST | `/api/auth/register` | `Auth\RegisterController` | — |
+| POST | `/api/auth/login` | `Auth\LoginController` | — |
+| GET | `/api/me` | `MeController` | JWT |
+| GET·POST | `/api/accounts` | `Ledger\AccountController` | JWT |
+| PATCH·DELETE | `/api/accounts/{id}` | `Ledger\AccountController` | JWT |
+| GET·POST | `/api/entries` | `Ledger\JournalEntryController` | JWT |
+| PATCH·DELETE | `/api/entries/{id}` | `Ledger\JournalEntryController` | JWT |
+| GET | `/api/reports/{balance-sheet,cash-flow,daily}` | `Reporting\ReportsController` | JWT |
+| GET | `/api/admin/users` | `Admin\AdminUsersController` | JWT + Admin |
+| PATCH·DELETE | `/api/admin/users/{id}` | `Admin\AdminUsersController` | JWT + Admin |
+
+### 백엔드 레이어별 위치 (`backend/src/`)
+
+- **진입점/부트스트랩**: `public/index.php` → `Bootstrap/AppFactory.php` (라우트·미들웨어), `Bootstrap/Container.php` (PHP-DI 바인딩)
+- **Domain** (프레임워크 무의존 순수 PHP): `Domain/Account` (User·Email·HashedPassword·UserStatus·UserRole), `Domain/Ledger` (Account·JournalEntry·JournalEntryLine·AccountType·CashFlowSection·NormalBalance·PaymentMethod + Repository 인터페이스), `Domain/Reporting` (BalanceSheet·CashFlow·DailyReport + 각 Service), `Domain/Clock` (Clock 인터페이스 + System/Fixed)
+- **Application** (유스케이스, Domain 에만 의존): `Application/Auth` (Register/Login + DTO), `Application/Admin` (Approve/ListUsers/UpdateUser/SoftDeleteUser), `Application/Ledger` (CreateAccount·RenameAccount·DeleteAccount·RecordJournalEntry·UpdateJournalEntry·SeedDefaultAccounts), `Application/Exception` (도메인 예외)
+- **Infrastructure** (Domain 인터페이스 구현): `Infrastructure/Persistence/Eloquent/*` (Repository 구현), `Infrastructure/Security` (JwtTokenService + FakeTokenService), `Infrastructure/Database/ConnectionFactory.php` (Capsule/Eloquent 부팅)
+- **Interface/Http**: `Controllers/*`, `Middleware` (JwtAuth·AdminAuth·Cors), `Validation/*` (BE 입력 검증), `Support/*` (Presenter·JsonResponder·AuthenticatedUser)
+- **Deploy** (닷홈 설치 흐름, §11.10): `Deploy/{PrecheckRunner, Installer, PhinxMigrator, *HtmlRenderer}` + 웹 엔트리 `backend/deploy/entries/*.php`
+- **DB**: 마이그레이션 `backend/database/migrations/` (Phinx), 시드 `backend/database/seeds/InitialAdminSeeder.php`, 설정 `backend/config/phinx.php`
+
+### 프론트엔드 위치 (`frontend/`)
+
+- **라우트 세그먼트**: `app/(auth)/{login,register}`, `app/(app)/{dashboard,accounts,transactions,reports/balance-sheet,reports/cash-flow}`, `app/(admin)/admin/users` — 모두 `'use client'` (static export 호환)
+- **컴포넌트**: `components/{auth,accounts,entries,reports,admin}/*`
+- **lib**: `lib/api/{client,auth,accounts,entries,reports,admin}.ts` (모든 fetch 는 `client.ts` 경유), `lib/schemas/*.ts` (Zod), `lib/stores/auth.ts` (Zustand persist + `useAuthHydrated`)
+- **테스트**: `tests/unit/*` (Vitest+RTL), `tests/e2e/*` (Playwright)
+
+### 테스트 스위트 (`backend/phpunit.xml` 의 testsuite 이름: `unit` / `integration` / `feature`)
+
+- `tests/Unit` (Domain·Application, InMemory repo) · `tests/Integration` (실 MySQL: Eloquent repo·마이그레이션·인덱스 EXPLAIN) · `tests/Feature` (Slim PSR-7 전체 요청). 공용 베이스: `tests/Support/{DatabaseTestCase,HttpTestCase,InMemory*Repository}`.
 
 ---
 
